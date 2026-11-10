@@ -1,44 +1,35 @@
 # Test-designer
 
-A private GitHub repository for a Copilot-style test-case designer focused on asynchronous API testing with Solace JMS request/reply messaging over topics.
+A GitHub Copilot skill collection for designing test cases and Behavior-Driven Development (BDD) scenarios for asynchronous APIs using Solace JMS request/reply messaging over topics.
 
-## Purpose
+## Skills
 
-This repo contains reusable skill files and examples for designing high-quality test cases for APIs that use:
+- [BDD async API test designer](.github/skills/bdd-async-api-test-designer/SKILL.md) — discover and formulate business-readable Gherkin acceptance scenarios for async APIs.
+- [Async API test designer](.github/skills/async-api-test-designer/SKILL.md) — broader test-plan design for payload, schema, JMS correlation, timing, and recovery.
+- [Test design techniques](.github/skills/test-design-techniques/SKILL.md) — black-box coverage techniques and risk-based case quality.
 
-- request topic publish
-- asynchronous processing
-- reply topic consumption
-- correlation by JMS headers/properties
-- contract validation, negative testing, and boundary coverage
+## Examples and references
 
-## Included assets
+- [BDD Gherkin example](examples/bdd/async-order-request-reply.feature)
+- [Solace JMS async request/reply test-plan example](examples/solace-jms-async-request-reply-test-plan.md)
+- [BDD and Gherkin references](references/BDD-REFERENCES.md)
+- [Testing and messaging references](references/REFERENCES.md)
+- [Reusable test-case template](templates/test-case-template.md)
 
-- `.github/skills/async-api-test-designer/SKILL.md` — the main skill for async API testing design
-- `.github/skills/test-design-techniques/SKILL.md` — the supporting test-design methodology
-- `examples/solace-jms-async-request-reply-test-plan.md` — illustrative test plan with realistic examples
-- `references/REFERENCES.md` — research references and quality sources
-- `templates/test-case-template.md` — reusable case format
+## Recommended BDD workflow
 
-## Recommended use
+Use BDD collaboratively: discover behavior with domain stakeholders, formulate concrete examples in Gherkin, then automate agreed scenarios. Provide the agent with the API contract, business rules, request/reply topology, and constraints. It should identify unknowns, ask focused questions, and mark unresolved outcomes as `TBD` rather than inventing acceptance criteria.
 
-Use these files when you want the agent to:
+Use Gherkin scenarios for important behavioral examples. Pair them with a contract/schema coverage matrix for exhaustive required-field, type, and boundary permutations so feature files remain readable.
 
-- design a complete async API test strategy
-- derive negative and boundary cases from request/response schemas
-- reason about JMS correlation, selectors, retries, and timeout behavior
-- produce a traceable test matrix instead of ad hoc examples
+## Safety and correctness
 
-## Best-practice prompt pattern
+- Treat the API contract and stakeholder agreement as sources of expected behavior.
+- Distinguish application payload rules from JMS metadata and broker behavior.
+- Do not assume a reply topic is conveyed by `JMSReplyTo`; confirm the actual routing design.
+- Keep destructive, malformed-message, retry, and high-volume tests in explicitly authorized non-production environments.
+- Never put credentials or real customer data in examples.
 
-Ask the agent with a prompt like this:
+## References
 
-"Design a comprehensive async API test plan for a Solace JMS request/reply flow. The requester publishes to topic A and expects a reply on topic B. Use the attached schema, business rules, and expected correlation behavior. Generate mandatory field tests, boundary tests, invalid type tests, schema tests, negative tests, and async flow tests. Return a prioritized matrix with test IDs, steps, expected results, and follow-up risks."
-
-## Important guardrails
-
-- Treat the API contract as the main source of truth.
-- Distinguish JMS metadata from payload schema.
-- Do not assume behavior unless the contract clearly states it.
-- Non-production environment only for malformed payloads, timeout tests, replay tests, and broker-level negative cases.
-- Capture unknowns explicitly as `TBD` and ask targeted questions rather than guessing.
+The skills use official Cucumber documentation for BDD and Gherkin, along with official Solace/JMS and schema references. See the `references/` directory.
