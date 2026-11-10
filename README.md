@@ -1,27 +1,44 @@
 # Test-designer
 
-Private for now: a GitHub Copilot skill collection for designing test cases for asynchronous APIs that use Solace JMS topics for request/reply messaging.
+A private GitHub repository for a Copilot-style test-case designer focused on asynchronous API testing with Solace JMS request/reply messaging over topics.
 
-## What’s here
+## Purpose
 
-- [` .github/skills/async-api-test-designer/SKILL.md`](.github/skills/async-api-test-designer/SKILL.md) — end-to-end test-design skill for asynchronous request/reply APIs.
-- [`.github/skills/test-design-techniques/SKILL.md`](.github/skills/test-design-techniques/SKILL.md) — systematic case-design methods and coverage checklist.
-- [`examples/solace-jms-async-request-reply-test-plan.md`](examples/solace-jms-async-request-reply-test-plan.md) — worked example with assumptions, sample schemas, and illustrative cases.
-- [`references/REFERENCES.md`](references/REFERENCES.md) — online references, with official specifications and Solace documentation prioritized.
-- [`templates/test-case-template.md`](templates/test-case-template.md) — reusable test-case format.
+This repo contains reusable skill files and examples for designing high-quality test cases for APIs that use:
 
-## Use the skills
+- request topic publish
+- asynchronous processing
+- reply topic consumption
+- correlation by JMS headers/properties
+- contract validation, negative testing, and boundary coverage
 
-Copy the `.github/skills/` directories into a repository where Copilot can use them. Provide the agent with the API contract, business rules, expected messaging topology, and test environment constraints. Ask it to produce a test plan and traceable cases; do not ask it to publish test messages unless that is explicitly authorized and the target is a designated test environment.
+## Included assets
 
-## Important design principles
+- `.github/skills/async-api-test-designer/SKILL.md` — the main skill for async API testing design
+- `.github/skills/test-design-techniques/SKILL.md` — the supporting test-design methodology
+- `examples/solace-jms-async-request-reply-test-plan.md` — illustrative test plan with realistic examples
+- `references/REFERENCES.md` — research references and quality sources
+- `templates/test-case-template.md` — reusable case format
 
-- Treat the supplied API contract and business rules as the source of truth. Mark unknown behavior as an assumption or question; do not invent expected outcomes.
-- Distinguish application payload validation from JMS headers, properties, delivery semantics, broker configuration, and operational behavior.
-- A request topic and a reply topic are not necessarily equivalent to a JMS `JMSReplyTo` destination. Confirm the actual contract and routing design.
-- Include positive, negative, boundary, schema, asynchronous, correlation, timeout, concurrency, and recovery coverage where applicable.
-- Never use production messaging destinations for negative, load, malformed-message, or destructive tests without explicit authorization.
+## Recommended use
 
-## References
+Use these files when you want the agent to:
 
-See [references/REFERENCES.md](references/REFERENCES.md). External references inform the approach; they do not replace the target API contract or environment-specific rules.
+- design a complete async API test strategy
+- derive negative and boundary cases from request/response schemas
+- reason about JMS correlation, selectors, retries, and timeout behavior
+- produce a traceable test matrix instead of ad hoc examples
+
+## Best-practice prompt pattern
+
+Ask the agent with a prompt like this:
+
+"Design a comprehensive async API test plan for a Solace JMS request/reply flow. The requester publishes to topic A and expects a reply on topic B. Use the attached schema, business rules, and expected correlation behavior. Generate mandatory field tests, boundary tests, invalid type tests, schema tests, negative tests, and async flow tests. Return a prioritized matrix with test IDs, steps, expected results, and follow-up risks."
+
+## Important guardrails
+
+- Treat the API contract as the main source of truth.
+- Distinguish JMS metadata from payload schema.
+- Do not assume behavior unless the contract clearly states it.
+- Non-production environment only for malformed payloads, timeout tests, replay tests, and broker-level negative cases.
+- Capture unknowns explicitly as `TBD` and ask targeted questions rather than guessing.

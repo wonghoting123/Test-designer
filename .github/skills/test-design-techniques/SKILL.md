@@ -1,47 +1,141 @@
 ---
 name: test-design-techniques
-description: Apply structured black-box techniques to create efficient, risk-based test coverage for API payloads and asynchronous workflows.
+description: Apply systematic black-box testing methods to create efficient, risk-based test coverage for API payloads and asynchronous request/reply flows.
 ---
 
-# Test design techniques
+# Test Design Techniques
 
-Use these techniques to derive cases from stated requirements and schemas. Select techniques that fit the rule; do not mechanically generate a huge list without risk rationale.
+Use these techniques to turn requirements and schemas into effective tests.
 
-## Equivalence partitioning
+## 1. Equivalence partitioning
 
-Divide inputs into classes expected to behave alike, including valid and invalid classes. Select representative values from each class. For example, for an integer range 1–100, classes might be below range, in range, above range, and wrong type. Confirm inclusivity and coercion rules from the contract.
+Group inputs into classes that should behave similarly:
 
-## Boundary-value analysis
+- valid values
+- invalid values
+- out-of-range values
+- unsupported values
+- missing values
 
-For ordered limits, include the boundary and adjacent values: `min-1`, `min`, `min+1`, `max-1`, `max`, `max+1`, where representable and safe. Apply to string length, numeric range, collection size, and date windows. Include zero, negative, precision/scale, overflow, and Unicode length semantics when relevant. Do not invent a limit if none is specified.
+Example: a numeric field with allowed range 1–100 should be tested with representative values from:
 
-## Decision tables
+- below range
+- inside range
+- above range
+- wrong type
+- null/empty if allowed
 
-For behavior depending on multiple conditions, list conditions and distinct outcomes. Cover each meaningful rule and contradictory/precedence cases. Reduce combinations only with an explicit method (e.g. pairwise) and retain high-risk combinations.
+## 2. Boundary value analysis
 
-## State-transition testing
+Apply this to ranges, lengths, counts, and dates. Include values just inside and just outside boundaries.
 
-Model request lifecycle states (for example: created, published, processing, replied, timed out, retried, failed). Test valid and invalid transitions, late/duplicate events, and recovery. Use only states and transitions supported by the design.
+Examples:
 
-## Schema and type testing
+- minimum valid
+- minimum invalid
+- maximum valid
+- maximum invalid
+- one below/above boundary
+- zero/negative where relevant
 
-For each field, exercise requiredness, declared type, format, enum, nullability, constraints, nesting, unknown-field policy, and version behavior. Compare against the actual schema validator's documented behavior; JSON Schema keywords and format assertion behavior can vary by dialect/configuration.
+## 3. Decision table testing
 
-## Negative and robustness testing
+Use decision tables when behavior depends on multiple business conditions.
 
-Test malformed/invalid payloads, wrong content types, unsupported values, and missing metadata according to specified handling. Verify safe, deterministic rejection and no unintended side effect. Keep fuzzing, very large payloads, and malformed bytes within approved test limits.
+For each condition, capture:
 
-## Risk and prioritization
+- true/false states
+- distinct outputs
+- rule priority and precedence
+- invalid combinations
 
-Prioritize by impact, likelihood, exposure, and detectability. Cover critical business rules, money/identity fields, message routing, correlation, idempotency, and failure recovery before low-risk permutations. Identify the minimum smoke subset separately.
+This works especially well for approval logic, routing rules, and validation rules with multiple flags.
 
-## Case quality checklist
+## 4. State transition testing
 
-- One primary purpose/variation per case where practical.
-- Preconditions and test data are explicit and repeatable.
-- Expected results are specific and observable (payload, destination, properties, status, logs/metrics, or timing).
-- Request and response are tied by correlation identifiers where applicable.
-- Timeout expectations include a defined duration/window and clock assumptions.
-- Each case traces to a requirement or is clearly labeled exploratory/risk-based.
-- No expected behavior is invented; uncertainties are marked TBD.
-- Cleanup and duplicate/replay safeguards are described.
+Use for request/reply and lifecycle state changes such as:
+
+- created
+- published
+- in progress
+- replied
+- rejected
+- timed out
+- retried
+- dead-lettered
+
+Test valid transitions, invalid transitions, and duplicate or delayed transitions.
+
+## 5. Schema testing
+
+Apply schema-based validation to:
+
+- required and optional fields
+- field types
+- enum values
+- nested objects
+- arrays and counts
+- additional properties policy
+- format constraints and strictness rules
+
+Do not assume the validator behaves the same across all JSON schema dialects. Check the implementation and version.
+
+## 6. Negative testing
+
+Always include explicit invalid scenarios such as:
+
+- missing required field
+- wrong type
+- unsupported value
+- malformed JSON
+- oversized payload
+- invalid date or enum value
+- malformed correlation metadata
+- mismatched replies
+
+Negative tests protect against silent coercion, unsafe defaults, and unexpected system behavior.
+
+## 7. Risk-based prioritization
+
+Sort cases by:
+
+- business criticality
+- data sensitivity
+- message routing risk
+- correlation correctness
+- failure severity
+- impact of duplicate or delayed message handling
+
+A good plan should include a small smoke subset plus a fuller regression design.
+
+## 8. Coverage checklist
+
+At minimum, verify:
+
+- required fields
+- optional fields
+- valid values
+- invalid values
+- boundary values
+- nested object behavior
+- array behavior
+- enums
+- type mismatches
+- schema violations
+- async flow correctness
+- correlation correctness
+- timeout and retry behavior
+
+## 9. Quality bar for a good test case
+
+A strong test case should have:
+
+- clear objective
+- specific setup
+- exact input
+- precise expected result
+- observable evidence
+- no hidden assumptions
+- clear cleanup or impact notes
+
+If there is uncertainty, label the assumption or ask a targeted question.

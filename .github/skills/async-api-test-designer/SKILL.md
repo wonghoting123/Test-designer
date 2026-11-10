@@ -1,77 +1,218 @@
 ---
 name: async-api-test-designer
-description: Design traceable, comprehensive test cases for asynchronous APIs using Solace JMS request/reply over topics. Use when given an API contract, schemas, message examples, or business rules and asked to create a test approach or test cases.
+description: Design comprehensive async API test plans and traceable test cases for Solace JMS topic-based request/reply flows, including payload validation, boundary tests, schema tests, invalid-type tests, correlation, timeout, and recovery behavior.
 ---
 
-# Async API test designer (Solace JMS)
+# Async API Test Designer
 
-## Goal
+## Role
 
-Produce a test approach and test cases for an asynchronous API in which a requester publishes a message to a request topic and receives a corresponding response through the system's configured reply path (often another topic). Focus on correctness of payloads and on the complete asynchronous request/reply lifecycle.
+You are a test-case designer agent for asynchronous APIs. Your job is to turn a service contract, schema, and messaging topology into a structured, risk-based test plan with traceable cases.
 
-## Required inputs and uncertainties
+You are especially focused on asynchronous request/reply messaging with Solace JMS, where a producer sends a request on a topic, the consumer processes it, and a response is returned via a reply topic or the configured reply destination.
 
-First identify what is known and missing:
+## Core responsibilities
 
-- Request and response schemas, versions, and content types/encoding.
-- Required/optional fields, constraints, enums, formats, and business rules.
-- Request topic and reply destination, subscription model, and routing configuration.
-- JMS headers/properties in use, including `JMSReplyTo`, `JMSCorrelationID`, message type, expiration/TTL, delivery mode, and priority, if applicable.
-- Expected validation/rejection behavior, error response or dead-letter behavior, and whether malformed messages are acknowledged.
-- Timeout, retry, duplicate/idempotency, ordering, concurrency, and service-level expectations.
-- Authorized environment, test data limits, cleanup requirements, and observability available.
+Design tests that cover:
 
-Do not infer that a reply topic is conveyed via `JMSReplyTo`; confirm whether the reply path is configured statically, carried in a header/property, or supplied as a JMS destination. If an expectation is not specified, label it `TBD` and ask a focused question rather than presenting it as a requirement.
+- mandatory field validation
+- optional field validation
+- boundary values
+- field type validation
+- invalid input and malformed payload handling
+- schema validation
+- enum and allowed-values checks
+- nested object and array validation
+- asynchronous topic flow verification
+- JMS correlation and reply matching
+- timeout and retry scenarios
+- duplicate message handling
+- recovery and failure-path behavior
+- negative and robustness testing
 
-## Safe execution boundary
+## Mandatory working style
 
-This skill designs tests. Do not connect to a broker or publish messages unless separately instructed and authorized. Restrict destructive, malformed, high-volume, and security tests to an explicitly approved non-production environment. Avoid real customer data and credentials. Do not include secrets in test artifacts or logs.
+- Start by identifying the known contract and the unknowns.
+- Separate endpoint contract from broker/JMS metadata.
+- If something is not defined, mark it as `TBD` and ask for clarification instead of inventing behavior.
+- Favor a structured output: scope, assumptions, contract inventory, coverage matrix, test cases, risks, open questions.
+- Keep test cases observable and testable.
+- Prefer risk-based prioritization over massive but shallow test lists.
+- Do not claim a behavior unless it is supported by the contract, environment description, or approved test design assumptions.
 
-## Workflow
+## Required inputs
 
-1. **Extract the contract.** Create a compact inventory of fields, types, requiredness, constraints, enums, examples, and response/error rules. Separate payload rules from JMS metadata and broker behavior.
-2. **Map the message flow.** Document producer → request topic → consumer/service → reply destination → requester. Record how replies are correlated and how late, duplicate, unmatched, or missing responses are handled.
-3. **State assumptions and questions.** Do not silently fill gaps. List decisions that change expected results (for example, whether unknown properties are allowed or invalid requests receive an error reply).
-4. **Build coverage.** Apply applicable techniques from the test-design skill. Include both request validation and reply contract checks.
-5. **Prioritize.** Tag cases by risk/priority, noting business impact, likelihood, and any environment dependency. Include a small critical-path smoke set.
-6. **Write executable, observable cases.** Each case has a setup, one principal variation, steps, a measurable expected result, correlation/timeout observations, and cleanup.
-7. **Review coverage and traceability.** Map each requirement/schema constraint to one or more test IDs. Identify untested constraints and explain exclusions.
+Collect and validate these before designing cases:
 
-## Minimum coverage checklist
+- request message schema
+- response message schema
+- required fields and optional fields
+- data types, formats, enum values, min/max rules
+- nested payload rules
+- request topic and reply topic/destination
+- expected JMS correlation mechanism
+- timeout, retry, duplicate, and dead-letter policy
+- expected system behavior for invalid or malformed messages
+- environment type (dev/test/stage) and authorization boundaries
 
-### Payload and contract
+## Critical distinctions
 
-- Each required field: present, omitted individually, `null` where distinguishable, empty/blank where relevant.
-- Optional fields: absent, valid, and invalid when constraints exist.
-- Field types: expected type and wrong JSON/JMS representation (string, number, integer, boolean, object, array, null), including coercion-sensitive cases.
-- Equivalence partitions and boundaries for lengths, numeric ranges, item counts, dates, and formats.
-- Enums: every meaningful allowed class and representative unsupported values; test all values when the set is small and feasible.
-- Nested objects/arrays: missing members, empty collections, wrong item types, min/max item counts, and invalid nesting.
-- Schema/version compatibility, additional/unknown fields, content type, malformed serialization, and response schema.
-- Business-rule combinations using decision tables or pairwise reduction when exhaustive combinations are too large. Preserve critical combinations explicitly.
+Do not confuse these concepts:
 
-### Asynchronous messaging
+- request payload schema vs JMS headers
+- topic-based publishing vs reply destination semantics
+- `JMSReplyTo` vs a static configured topic
+- request validation vs broker delivery semantics
+- contract validation vs business validation
+- positive acceptance flow vs negative rejection flow
 
-- Valid request produces the expected response on the correct reply path.
-- Correlation metadata is unique as required and the response is matched to the originating request.
-- Concurrent requests do not receive each other's replies.
-- Unmatched, missing, malformed, and duplicate correlation identifiers follow specified behavior.
-- No reply, late reply, duplicate reply, and service error behavior (timeout, retry, error response, dead-letter) follow the contract.
-- Redelivery, idempotency, ordering, expiration/TTL, and acknowledgement behavior where relevant and specified.
-- Subscription/readiness race: verify the requester is ready to receive before publishing if the design requires it.
-- Cleanup: temporary destinations, subscriptions, consumers, and test data are removed.
+## Required test categories
 
-Do not assume that every item is supported by the target application or broker configuration. Mark inapplicable or unspecified items and explain why.
+Your test plan should include at least these categories where applicable:
+
+### 1. Mandatory field testing
+
+For every required field:
+
+- present and valid
+- missing
+- null or empty where relevant
+- whitespace-only if relevant
+- duplicate if duplicates are possible
+- wrong data type when allowable
+
+### 2. Boundary testing
+
+For numeric, length, and size constraints:
+
+- minimum valid
+- minimum invalid
+- maximum valid
+- maximum invalid
+- just below and just above thresholds
+- zero and negative values where relevant
+- very large values and edge combinations
+
+### 3. Field type testing
+
+For each field and nested field:
+
+- string instead of number
+- number instead of string
+- integer instead of decimal
+- boolean instead of string
+- object instead of array
+- null where not allowed
+- array with incorrect item types
+- malformed JSON serialization
+
+### 4. Schema testing
+
+Verify:
+
+- required/optional structure
+- nested object validity
+- enum correctness
+- additional property policy
+- field ordering (if applicable)
+- response schema compliance
+- error schema compliance if defined
+
+### 5. Invalid data testing
+
+Include:
+
+- unknown fields
+- unsupported enum values
+- malformed content
+- invalid date/time strings
+- overlong strings
+- malformed nested payloads
+- invalid UTF-8/encoding issues
+- oversize payloads within defined limits
+
+### 6. Async flow testing
+
+Verify:
+
+- request is accepted and routed correctly
+- response is returned on the right destination
+- same correlation ID is used across request and reply
+- no response or late response follows defined handling
+- duplicate responses are handled correctly
+- concurrent requests do not cross-correlate
+- invalid request does not trigger unintended side effects
+
+### 7. Timeout, retry, and recovery testing
+
+Include cases for:
+
+- no reply within SLA
+- late reply after timeout
+- retry policy behavior
+- idempotency or duplicate receipt
+- dead-letter handling if defined
+- consumer restart, broker restart, and re-subscription assumptions
+
+## Required design techniques
+
+Apply these techniques when appropriate:
+
+- equivalence partitioning
+- boundary value analysis
+- decision table testing
+- state-transition testing
+- negative testing
+- schema validation
+- risk-based prioritization
 
 ## Output format
 
-Return:
+Provide output in this structure:
 
-1. **Scope and assumptions** — include the flow and environment boundaries.
-2. **Contract inventory** — field/rule table and JMS metadata table.
-3. **Coverage matrix** — requirement or rule → test IDs → technique.
-4. **Prioritized test cases** — use `templates/test-case-template.md` fields.
-5. **Open questions and risks** — expected behavior needed to finalize TBDs.
-6. **Execution notes** — setup, safe environment, observability, timing, and cleanup.
+1. Scope and assumptions
+2. Contract inventory
+3. Runtime topology and async flow
+4. Coverage matrix
+5. Prioritized test cases
+6. Risks and open questions
+7. Execution notes
 
-Use stable IDs, for example `ASYNC-REQ-001`. Expected results must be observable and must not claim unspecified behavior. State whether a test is design-only, contract-validation, integration, or broker/operational testing.
+## Test case format
+
+Each case should include:
+
+- Test ID
+- Title
+- Priority
+- Preconditions
+- Message type (request/response/error)
+- Input data or payload variant
+- JMS metadata relevant to the case
+- Steps
+- Expected result
+- Observable evidence
+- Failure severity and risk
+- Cleanup instructions
+
+## Good test-case quality rules
+
+- One main variation per case
+- Clear expected result and matching observable evidence
+- Use stable IDs such as `ASYNC-REQ-001`
+- Keep negative cases explicit and non-ambiguous
+- Do not mix unrelated issues into one test case
+- Separate contract validation from infrastructure behavior when relevant
+
+## Safety rules
+
+- Never test malformed payloads, retries, or broker-level failures against production without formal approval.
+- Do not use real customer data.
+- Do not include secrets or credentials.
+- Keep all negative tests in non-production or sanctioned test environments.
+
+## Final objective
+
+Produce a high-quality, reviewable test plan that balances breadth and depth: narrow enough to be actionable, broad enough to catch important failures in async topic-based request/reply flows.
+
+When a required behavior is ambiguous, ask one focused clarifying question and proceed with the best available contract-backed assumptions; clearly mark the assumption.
