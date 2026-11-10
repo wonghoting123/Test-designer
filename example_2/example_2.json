@@ -1,0 +1,235 @@
+{
+  "asyncapi": "3.0.0",
+  "info": {
+    "title": "Enterprise Order Management Service (Solace Mesh)",
+    "version": "2.1.0",
+    "description": "Production-grade AsyncAPI contract handling transactional order processing via Solace PubSub+ dynamic topic-to-queue architectures.",
+    "contact": {
+      "name": "Architecture Core Team",
+      "email": "arch-team@enterprise.com"
+    }
+  },
+  "servers": {
+    "solace-event-mesh": {
+      "url": "tcps://mr-xyz.messaging.solace.cloud:55443",
+      "protocol": "solace",
+      "description": "Primary Secured Solace Event Mesh Broker",
+      "security": [
+        {
+          "clientCertAuth": []
+        }
+      ],
+      "bindings": {
+        "solace": {
+          "msgVpn": "EnterpriseCommerceVpn"
+        }
+      }
+    }
+  },
+  "channels": {
+    "orderInboundChannel": {
+      "address": "acme/orders/v2/checkout/{region}/{storeId}",
+      "title": "Dynamic Order Placement Inbound Topic",
+      "parameters": {
+        "region": {
+          "enum": ["US-EAST", "US-WEST", "EU-WEST", "APAC-SG"],
+          "description": "Geographical region boundary identifier for localized topic routing."
+        },
+        "storeId": {
+          "type": "string",
+          "pattern": "^STORE-\\d{4}$",
+          "description": "Strict regex pattern matching standard corporate store tokens (e.g., STORE-1234)."
+        }
+      },
+      "messages": {
+        "orderRequest": {
+          "$ref": "#/components/messages/OrderPlacementRequest"
+        }
+      },
+      "bindings": {
+        "solace": {
+          "bindingVersion": "0.4.0",
+          "destinations": [
+            {
+              "destinationType": "queue",
+              "queue": {
+                "name": "Acme_Inbound_Orders_Processing_Q",
+                "durable": true,
+                "exclusive": true,
+                "maxTtl": 86400000
+              },
+              "topicSubscriptions": [
+                "acme/orders/v2/checkout/+/+"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "orderReplyChannel": {
+      "address": "acme/orders/v2/replies/{correlationId}",
+      "title": "Dynamic Response/Acknowledgment Channel",
+      "parameters": {
+        "correlationId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique transaction token mapping replies to client sessions."
+        }
+      },
+      "messages": {
+        "orderSuccess": {
+          "$ref": "#/components/messages/OrderProcessingSuccess"
+        },
+        "orderFailure": {
+          "$ref": "#/components/messages/OrderProcessingFailure"
+        }
+      }
+    }
+  },
+  "operations": {
+    "processIncomingOrder": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/orderInboundChannel"
+      },
+      "summary": "Core processing pipeline consumes from order queues and emits response state via Solace Reply parameters.",
+      "reply": {
+        "channel": {
+          "$ref": "#/channels/orderReplyChannel"
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "clientCertAuth": {
+        "type": "X509",
+        "description": "Mutual TLS client certificate authentication."
+      }
+    },
+    "messages": {
+      "OrderPlacementRequest": {
+        "name": "OrderPlacementRequest",
+        "title": "Order Placement Payload",
+        "contentType": "application/json",
+        "correlationId": {
+          "location": "$message.header#/Solace_Correlation_Id",
+          "description": "Extracts the execution context key directly out of the Solace native transport header packet metadata."
+        },
+        "payload": {
+          "type": "object",
+          "required": ["transactionId", "customerMetadata", "orderItems", "totalGrossAmount", "submittedAt"],
+          "properties": {
+            "transactionId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "customerMetadata": {
+              "type": "object",
+              "required": ["customerId", "loyaltyTier"],
+              "properties": {
+                "customerId": {
+                  "type": "string",
+                  "pattern": "^CUST-[A-Z]{3}-\\d{6}$"
+                },
+                "loyaltyTier": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                }
+              }
+            },
+            "orderItems": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 50,
+              "items": {
+                "type": "object",
+                "required": ["sku", "quantity", "unitPrice"],
+                "properties": {
+                  "sku": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 12
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 999
+                  },
+                  "unitPrice": {
+                    "type": "number",
+                    "minimum": 0.01
+                  }
+                }
+              }
+            },
+            "totalGrossAmount": {
+              "type": "number",
+              "minimum": 0.01,
+              "maximum": 100000.00
+            },
+            "submittedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      },
+      "OrderProcessingSuccess": {
+        "name": "OrderProcessingSuccess",
+        "title": "Order Fulfilled Acknowledgment",
+        "contentType": "application/json",
+        "payload": {
+          "type": "object",
+          "required": ["transactionId", "orderId", "status", "allocatedAt"],
+          "properties": {
+            "transactionId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "orderId": {
+              "type": "string",
+              "pattern": "^ORD-\\d{10}$"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["PROCESSED", "FULFILLED", "ROUTED_TO_WAREHOUSE"]
+            },
+            "allocatedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      },
+      "OrderProcessingFailure": {
+        "name": "OrderProcessingFailure",
+        "title": "Order Rejected Exception Context",
+        "contentType": "application/json",
+        "payload": {
+          "type": "object",
+          "required": ["transactionId", "errorCode", "errorMessage", "rejectedAt"],
+          "properties": {
+            "transactionId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "errorCode": {
+              "type": "string",
+              "enum": ["ERR_INSUFFICIENT_STOCK", "ERR_INVALID_SKU", "ERR_CREDIT_DENIED", "ERR_GATEWAY_TIMEOUT"]
+            },
+            "errorMessage": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "rejectedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    }
+  }
+}

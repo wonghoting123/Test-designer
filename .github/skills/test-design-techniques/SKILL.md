@@ -126,6 +126,10 @@ At minimum, verify:
 - correlation correctness
 - timeout and retry behavior
 
+For schema-derived plans, track coverage per field rather than relying only on category-level checkmarks. For each required field, distinguish missing from present-but-null; consider empty string, wrong type, and field-specific boundaries where meaningful. Record each item as covered, not applicable with a reason, or deferred/`TBD`.
+
+When the same design is delivered in multiple artifacts (for example, Gherkin plus a Markdown test plan), reconcile them against a shared coverage/traceability matrix. Check that inputs and expected outcomes agree and that cases omitted from one artifact are intentionally identified, not accidentally lost.
+
 ## 9. Quality bar for a good test case
 
 A strong test case should have:

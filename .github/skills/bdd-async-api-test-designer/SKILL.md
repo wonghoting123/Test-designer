@@ -27,8 +27,10 @@ Before finalizing, establish or explicitly mark unknown:
 - Which business capability and actor does the feature describe?
 - What is the request and what business outcome should follow?
 - What request and response schemas, versions, and rules apply?
-- What are the request topic and reply path? Is the reply path static, configured, or provided through `JMSReplyTo`?
-- How are replies matched to requests (for example, correlation ID)?
+- Are required fields tested as "missing" versus "present but null"? These are semantically different inputs and can require different expected outcomes.
+- What are the request topic and reply path? Is the reply path static, configured, or provided through a reply channel or `JMSReplyTo`?
+- How are replies matched to requests (for example, correlation ID or userId-based correlation in the payload)?
+- Does the contract define a request/response pair, or is it publish-only with no reply semantics?
 - What is the agreed response window and how is it measured?
 - What happens for invalid requests, timeouts, duplicates, late replies, and service failures?
 - What observable evidence proves the behavior (reply content/status, downstream effect, error outcome, or agreed event)?
@@ -81,6 +83,18 @@ Check for relevant coverage across:
 
 Map each scenario to a requirement, rule, or explicitly labeled risk. Record exclusions and unresolved contract questions.
 
+### Mandatory coverage reconciliation before delivery
+
+When the request includes both feature files and a test plan, derive both from one shared coverage inventory and reconcile them before responding. Do not assume one artifact covers a case merely because the other does.
+
+- Inventory every request and response field, requiredness, type, format, enum, and declared business/schema constraint.
+- For each required field, check valid, omitted, present-but-`null`, empty string, and wrong-type variants where meaningful; separately consider whitespace-only values and field-specific boundaries.
+- Map each applicable inventory item to scenario/test-case IDs in both artifacts. A case may be plan-only if prose would harm BDD readability, but label it as such and retain its test case in the plan or matrix.
+- Mark non-applicable and deferred cases with a reason or `TBD`; never let an unresolved expected result disappear from the matrix.
+- Check that inputs and expected results agree between Gherkin, test cases, and the coverage matrix.
+
+Treat reconciliation as a delivery gate: every inventory item must be covered, explicitly excluded with rationale, or visibly deferred before finalizing.
+
 ## Required deliverables
 
 Return, in this order:
@@ -104,3 +118,5 @@ Use stable scenario identifiers only if the team's convention supports them; oth
 - Are negative and boundary cases selected for risk and clarity rather than volume?
 - Are scenarios independent, deterministic, and safe for the stated environment?
 - Are unresolved decisions visible rather than silently guessed?
+- Has every request/response field and applicable invalid-value variant been reconciled to a scenario/test case, explicit exclusion, or `TBD`?
+- If multiple artifacts were requested, do their cases, inputs, and expected outcomes match?

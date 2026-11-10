@@ -50,7 +50,8 @@ Collect and validate these before designing cases:
 - data types, formats, enum values, min/max rules
 - nested payload rules
 - request topic and reply topic/destination
-- expected JMS correlation mechanism
+- whether the reply is emitted on a dedicated reply channel, `JMSReplyTo`, or a static topic/queue
+- expected correlation mechanism and how request/reply pairs are matched
 - timeout, retry, duplicate, and dead-letter policy
 - expected system behavior for invalid or malformed messages
 - environment type (dev/test/stage) and authorization boundaries
@@ -76,10 +77,13 @@ For every required field:
 
 - present and valid
 - missing
-- null or empty where relevant
+- present with `null` value
+- empty string or empty array/object where relevant
 - whitespace-only if relevant
 - duplicate if duplicates are possible
 - wrong data type when allowable
+
+Explicitly distinguish between a field being absent and a field being present but `null`, because these often trigger different validation rules and should be tested separately.
 
 ### 2. Boundary testing
 
@@ -154,6 +158,25 @@ Include cases for:
 - dead-letter handling if defined
 - consumer restart, broker restart, and re-subscription assumptions
 
+## Mandatory coverage reconciliation
+
+Before delivering a test plan, build a field-by-field inventory from both the request and response schemas. For every field and constraint, record at least one of:
+
+- covered by one or more test cases, with their IDs
+- not applicable, with a reason
+- deferred or `TBD`, with the missing decision and owner/question stated
+
+For required request fields, explicitly reconcile valid, missing, `null`, empty-string, and wrong-type cases where meaningful. Add whitespace-only, boundary, format, enum, and range cases when the schema or business rules make them relevant. Do not treat a generic “invalid request” case as evidence that each field variant is covered.
+
+If producing both a BDD feature and a Markdown test plan, cross-check them against the same coverage matrix before delivery:
+
+- every required case in the plan maps to a feature scenario or is clearly identified as plan-only
+- every feature scenario maps to a contract rule, requirement, or labeled risk and appears in the plan/matrix
+- test inputs and expected outcomes agree across artifacts
+- all unresolved expected outcomes remain visibly `TBD`; do not silently omit them
+
+Do not finalize until every inventory row has coverage, an explicit exclusion, or an explicit `TBD`.
+
 ## Required design techniques
 
 Apply these techniques when appropriate:
@@ -177,6 +200,7 @@ Provide output in this structure:
 5. Prioritized test cases
 6. Risks and open questions
 7. Execution notes
+8. Field-by-field coverage reconciliation (include this when producing a contract-derived plan)
 
 ## Test case format
 
