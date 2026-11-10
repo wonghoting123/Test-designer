@@ -10,14 +10,7 @@ A GitHub Copilot skill collection for designing test cases and Behavior-Driven D
 
 ## Examples and references
 
-- [BDD Gherkin example](examples/bdd/async-order-request-reply.feature)
-- [Solace request/reply signup BDD example](example_1/user-signup-solace.feature)
-- [Solace user signup request/reply test plan](example_1/solace-user-signup-request-reply-test-plan.md)
-- [Kafka user signup test plan](example_1/user-signup-asyncapi-test-plan.md)
-- [Solace JMS async request/reply test-plan example](examples/solace-jms-async-request-reply-test-plan.md)
-- [BDD and Gherkin references](references/BDD-REFERENCES.md)
-- [Testing and messaging references](references/REFERENCES.md)
-- [Reusable test-case template](templates/test-case-template.md)
+- [Async API test design training materials](async_api_test_design_training/README.md) — guidance, contracts, feature examples, test plans, references, and templates.
 
 ## Recommended BDD workflow
 
@@ -25,7 +18,7 @@ Use BDD collaboratively: discover behavior with domain stakeholders, formulate c
 
 Use Gherkin scenarios for important behavioral examples. Pair them with a contract/schema coverage matrix for exhaustive required-field, type, and boundary permutations so feature files remain readable.
 
-For the agent's general workflow and typical async API test coverage, see the [AsyncAPI test case design guide](test_case_design_feedback.md).
+For the agent's general workflow and typical async API test coverage, see the [AsyncAPI test case design guide](async_api_test_design_training/guidance/test_case_design_feedback.md).
 
 ## Safety and correctness
 
@@ -37,4 +30,4 @@ For the agent's general workflow and typical async API test coverage, see the [A
 
 ## References
 
-The skills use official Cucumber documentation for BDD and Gherkin, along with official Solace/JMS and schema references. See the `references/` directory.
+The skills use official Cucumber documentation for BDD and Gherkin, along with official Solace/JMS and schema references. See [training references](async_api_test_design_training/references/).

@@ -25,4 +25,4 @@ These sources were reviewed for the BDD-oriented test-designer skill. Cucumber's
 ## Related repository references
 
 - See [`REFERENCES.md`](REFERENCES.md) for black-box test design, Solace JMS, JSON Schema, and API contract references.
-- See [`../examples/solace-jms-async-request-reply-test-plan.md`](../examples/solace-jms-async-request-reply-test-plan.md) for an illustrative async test plan.
+- See [`../test-plans/solace-jms-async-request-reply-test-plan.md`](../test-plans/solace-jms-async-request-reply-test-plan.md) for an illustrative async test plan.

@@ -2,9 +2,9 @@
 
 ## 1. Scope and assumptions
 
-This plan is derived from [`example_2.json`](./example_2.json), an AsyncAPI 3.0.0 contract for Solace order processing. It covers the inbound order channel, its queue binding, dynamic channel parameters, request schema, correlation metadata, and the success/failure response schemas.
+This plan is derived from [`example_2.json`](../contracts/example_2.json), an AsyncAPI 3.0.0 contract for Solace order processing. It covers the inbound order channel, its queue binding, dynamic channel parameters, request schema, correlation metadata, and the success/failure response schemas.
 
-The companion BDD scenarios are in [`order-management.feature`](./order-management.feature).
+The companion BDD scenarios are in [`order-management.feature`](../features/order-management.feature).
 
 - Inbound address: `acme/orders/v2/checkout/{region}/{storeId}`
 - Queue: `Acme_Inbound_Orders_Processing_Q`
